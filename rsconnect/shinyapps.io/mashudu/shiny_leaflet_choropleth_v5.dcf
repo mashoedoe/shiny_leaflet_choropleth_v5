@@ -1,0 +1,8 @@
+name: shiny_leaflet_choropleth_v5
+account: mashudu
+server: shinyapps.io
+bundleId: 238745
+url: https://mashoedoe.shinyapps.io/shiny_leaflet_choropleth_v5
+when: 1439463692.60406
+asMultiple: FALSE
+asStatic: FALSE

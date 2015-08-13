@@ -142,22 +142,11 @@ server <- function(session, input, output) {
     observe(if (input$select_map_level == 'Province'){
         gis$tj <- province_tj
     })
-    observe(if (input$select_map_level == 'Ward' & input$enable_hover==TRUE &
+    observe(if (input$select_map_level == 'Ward' & 
                 ((!is.null(gis$shp_mouseover_id)) | (!is.null(input$map1_topojson_mouseover)))){
         gis$shp <- subset(ward_tj_spd,
                           subset = ward_tj_spd@data$MUNICNAME == gis$slice2)
     })
-    observe(if (input$select_map_level == 'Ward' & input$enable_hover==FALSE & 
-                is.null(gis$shp_mouseover_id) & is.null(input$map1_topojson_mouseover)){
-        gis$shp <- subset(ward_tj_spd,
-                          subset = ward_tj_spd@data$MUNICNAME == gis$slice2)
-    })
-    observe(if (input$select_map_level == 'Ward' & input$enable_hover==FALSE &
-                ((!is.null(gis$shp_mouseover_id)) | (!is.null(input$map1_topojson_mouseover)))){
-        gis$shp <- subset(ward_tj_spd,
-                          subset = ward_tj_spd@data$MUNICNAME == gis$slice2)
-    })
-    
     observe(if (input$select_map_level == 'Municipality'){
         gis$shp <- town_tj_spd
     })
@@ -391,8 +380,9 @@ server <- function(session, input, output) {
         })
     })
     
-    observeEvent(input$select_map_level,{
-        observe(if (input$enable_hover == TRUE){
+    observe(if (input$enable_hover == TRUE){
+        
+        observeEvent(input$select_map_level,{
             label = 'proxy_map_event'
             proxy <- leafletProxy(
                 "map1"
@@ -408,10 +398,7 @@ server <- function(session, input, output) {
                     opacity=1,fill=T,smoothFactor = 0.5
                 )
         })
-    })
-    
-    observe(if(input$enable_hover == TRUE & input$select_map_level == 'Ward'){
-        label="event19b"
+        observe(if(input$enable_hover == TRUE & input$select_map_level == 'Ward'){ label="event19b"
         proxy <- leafletProxy(
             "map1", data =gis$shp
         )
@@ -425,16 +412,17 @@ server <- function(session, input, output) {
                 opacity=1,fill=T,smoothFactor = 0.5, fillOpacity = 0.5,
                 fillColor = gis$binpal(gis$shp@data$DENSITY)
             ) 
-    })
-    
-    observeEvent(gis$shp_mouseover_id,label="event22", {
-        if (input$enable_hover == TRUE & input$select_map_level == 'Ward') {
-            proxy <- leafletProxy(
-                "map1", data = subset(
-                    gis$shp, 
-                    gis$shp@data$ID == gis$shp_mouseover_id
+        })
+        
+        
+        observeEvent(gis$shp_mouseover_id,label="event22", {
+            if (input$enable_hover == TRUE & input$select_map_level == 'Ward') {
+                proxy <- leafletProxy(
+                    "map1", data = subset(
+                        gis$shp, 
+                        gis$shp@data$ID == gis$shp_mouseover_id
+                    )
                 )
-            )
             proxy %>%
                 clearGroup('single') %>%
 #                clearGroup('gis_shp') %>%
@@ -442,49 +430,50 @@ server <- function(session, input, output) {
                             stroke=T,weight=3,color="#555555",opacity=1,
                             smoothFactor=1,fill=F
                 )
-        }
-    })
-    
-    observeEvent(input$map1_topojson_mouseover,label="event23", {
-        if (input$enable_hover == TRUE & input$select_map_level == 'Municipality') {
-            proxy <- leafletProxy(
-                "map1", data = subset(
-                    town_tj_spd,
-                    town_tj_spd@data$MAP_TITLE == gis$slice2
+            }
+        })
+        
+        observeEvent(input$map1_topojson_mouseover,label="event23", {
+            if (input$select_map_level == 'Municipality') {
+                proxy <- leafletProxy(
+                    "map1", data = subset(
+                        town_tj_spd,
+                        town_tj_spd@data$MAP_TITLE == gis$slice2
+                    )
                 )
-            )
+                proxy %>%
+                    clearGroup('single') %>%
+#                    hideGroup('town_slice') %>%
+                    addPolygons(
+                        group = 'single',
+                        stroke=T,weight=3,color="#555555",opacity=1,
+                        smoothFactor=1,fill = F
+                    )
+            }
+        })
+        
+        observeEvent(input$map1_topojson_mouseout,label="event24", {
+            proxy <- leafletProxy(mapId = 'map1')
             proxy %>%
-                clearGroup('single') %>%
-                #                    hideGroup('town_slice') %>%
-                addPolygons(
-                    group = 'single',
-                    stroke=T,weight=3,color="#555555",opacity=1,
-                    smoothFactor=1,fill = F
+                clearGroup('single')
+        })
+        
+        observeEvent(input$map1_topojson_mouseover,label="event25", {
+            if (input$select_map_level == 'Province') {
+                proxy <- leafletProxy(
+                    "map1", data = subset(
+                        province_tj_spd,
+                        province_tj_spd@data$PROVINCE == gis$slice1)
                 )
-        }
-    })
-    
-    observeEvent(input$map1_topojson_mouseout,label="event24", {
-        proxy <- leafletProxy(mapId = 'map1')
-        proxy %>%
-            clearGroup('single')
-    })
-    
-    observeEvent(input$map1_topojson_mouseover,label="event25", {
-        if (input$enable_hover == TRUE & input$select_map_level == 'Province') {
-            proxy <- leafletProxy(
-                "map1", data = subset(
-                    province_tj_spd,
-                    province_tj_spd@data$PROVINCE == gis$slice1)
-            )
-            proxy %>%
-                clearGroup('single') %>%
-                addPolygons(
-                    group = 'single',
-                    stroke=T,weight=3,color="#555555",opacity=1,
-                    smoothFactor=1,fill = F,fillOpacity = 0
-                )
-        }
+                proxy %>%
+                    clearGroup('single') %>%
+                    addPolygons(
+                        group = 'single',
+                        stroke=T,weight=3,color="#555555",opacity=1,
+                        smoothFactor=1,fill = F,fillOpacity = 0
+                    )
+            }
+        })
     })
     
 #    observe(if (input$enable_hover == FALSE){
